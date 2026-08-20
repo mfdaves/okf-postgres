@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: okf-postgres
+      - uses: actions/checkout@v4
+        with:
+          repository: mfdaves/okf-mcp
+          path: okf-mcp
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: |
+            okf-postgres/package-lock.json
+            okf-mcp/package-lock.json
+      - run: npm ci
+        working-directory: okf-mcp
+      - run: npm ci
+        working-directory: okf-postgres
+      - run: npm test
+        working-directory: okf-postgres
+      - run: npm run smoke
+        working-directory: okf-postgres
+      - run: npm run pack:check
+        working-directory: okf-postgres
+
+  postgres:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        postgres: [14, 18]
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: okf_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d okf_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: okf-postgres
+      - uses: actions/checkout@v4
+        with:
+          repository: mfdaves/okf-mcp
+          path: okf-mcp
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            okf-postgres/package-lock.json
+            okf-mcp/package-lock.json
+      - run: npm ci
+        working-directory: okf-mcp
+      - run: npm ci
+        working-directory: okf-postgres
+      - run: npm run live:smoke
+        working-directory: okf-postgres
+        env:
+          OKF_POSTGRES_LIVE_TEST: "1"
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/okf_test

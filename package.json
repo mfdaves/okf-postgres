@@ -1,0 +1,43 @@
+{
+  "name": "@mfdaves/okf-postgres",
+  "version": "0.1.0",
+  "description": "Read-only PostgreSQL metadata producer for Open Knowledge Format bundles.",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "bin": {
+    "okf-postgres": "bin/okf-postgres.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "okf",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node --test test/*.test.js",
+    "coverage": "node --experimental-test-coverage --test test/*.test.js",
+    "smoke": "node scripts/mock-smoke.js",
+    "live:smoke": "node scripts/live-smoke.js",
+    "pack:check": "npm pack --dry-run"
+  },
+  "keywords": [
+    "okf",
+    "open-knowledge-format",
+    "postgresql",
+    "metadata",
+    "data-catalog"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "js-yaml": "^5.3.0",
+    "pg": "^8.23.0"
+  }
+}

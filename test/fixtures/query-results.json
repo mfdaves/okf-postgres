@@ -1,0 +1,225 @@
+{
+  "database": [
+    {
+      "database_name": "shop",
+      "server_version": "16.4",
+      "comment": "Shop application database"
+    }
+  ],
+  "schemas": [
+    {
+      "schema_name": "public",
+      "comment": "Application data"
+    }
+  ],
+  "allschemas": [
+    {
+      "schema_name": "public",
+      "comment": "Application data"
+    }
+  ],
+  "relations": [
+    {
+      "relation_oid": "100",
+      "schema_name": "public",
+      "relation_name": "customers",
+      "relation_kind": "table",
+      "comment": "Registered customers",
+      "view_definition": null
+    },
+    {
+      "relation_oid": "101",
+      "schema_name": "public",
+      "relation_name": "orders",
+      "relation_kind": "table",
+      "comment": "Customer orders",
+      "view_definition": null
+    },
+    {
+      "relation_oid": "102",
+      "schema_name": "public",
+      "relation_name": "order_summary",
+      "relation_kind": "view",
+      "comment": "Order totals by customer",
+      "view_definition": "SELECT customer_id, count(*) AS order_count\nFROM public.orders\nGROUP BY customer_id;"
+    }
+  ],
+  "columns": [
+    {
+      "relation_oid": "100",
+      "schema_name": "public",
+      "relation_name": "customers",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": false,
+      "column_default": "nextval('customers_id_seq'::regclass)",
+      "identity_kind": "d",
+      "generated_kind": "",
+      "comment": "Customer identifier"
+    },
+    {
+      "relation_oid": "100",
+      "schema_name": "public",
+      "relation_name": "customers",
+      "ordinal_position": 2,
+      "column_name": "email",
+      "data_type": "text",
+      "is_nullable": false,
+      "column_default": null,
+      "identity_kind": "",
+      "generated_kind": "",
+      "comment": "Login email"
+    },
+    {
+      "relation_oid": "100",
+      "schema_name": "public",
+      "relation_name": "customers",
+      "ordinal_position": 3,
+      "column_name": "email_normalized",
+      "data_type": "text",
+      "is_nullable": true,
+      "column_default": "lower(email)",
+      "identity_kind": "",
+      "generated_kind": "s",
+      "comment": "Search-normalized email"
+    },
+    {
+      "relation_oid": "101",
+      "schema_name": "public",
+      "relation_name": "orders",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": false,
+      "column_default": null,
+      "identity_kind": "d",
+      "generated_kind": "",
+      "comment": null
+    },
+    {
+      "relation_oid": "101",
+      "schema_name": "public",
+      "relation_name": "orders",
+      "ordinal_position": 2,
+      "column_name": "customer_id",
+      "data_type": "bigint",
+      "is_nullable": false,
+      "column_default": null,
+      "identity_kind": "",
+      "generated_kind": "",
+      "comment": "Owning customer"
+    },
+    {
+      "relation_oid": "101",
+      "schema_name": "public",
+      "relation_name": "orders",
+      "ordinal_position": 3,
+      "column_name": "status",
+      "data_type": "public.order_status",
+      "is_nullable": false,
+      "column_default": "'pending'::order_status",
+      "identity_kind": "",
+      "generated_kind": "",
+      "comment": "Order lifecycle state"
+    },
+    {
+      "relation_oid": "102",
+      "schema_name": "public",
+      "relation_name": "order_summary",
+      "ordinal_position": 1,
+      "column_name": "customer_id",
+      "data_type": "bigint",
+      "is_nullable": true,
+      "column_default": null,
+      "identity_kind": "",
+      "generated_kind": "",
+      "comment": null
+    },
+    {
+      "relation_oid": "102",
+      "schema_name": "public",
+      "relation_name": "order_summary",
+      "ordinal_position": 2,
+      "column_name": "order_count",
+      "data_type": "bigint",
+      "is_nullable": true,
+      "column_default": null,
+      "identity_kind": "",
+      "generated_kind": "",
+      "comment": null
+    }
+  ],
+  "constraints": [
+    {
+      "relation_oid": "100",
+      "schema_name": "public",
+      "relation_name": "customers",
+      "constraint_name": "customers_pkey",
+      "constraint_type": "primary_key",
+      "columns": ["id"],
+      "referenced_schema": null,
+      "referenced_relation": null,
+      "referenced_columns": null,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation_oid": "100",
+      "schema_name": "public",
+      "relation_name": "customers",
+      "constraint_name": "customers_email_key",
+      "constraint_type": "unique",
+      "columns": ["email"],
+      "referenced_schema": null,
+      "referenced_relation": null,
+      "referenced_columns": null,
+      "definition": "UNIQUE (email)"
+    },
+    {
+      "relation_oid": "101",
+      "schema_name": "public",
+      "relation_name": "orders",
+      "constraint_name": "orders_customer_id_fkey",
+      "constraint_type": "foreign_key",
+      "columns": ["customer_id"],
+      "referenced_schema": "public",
+      "referenced_relation": "customers",
+      "referenced_columns": ["id"],
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE DEFERRABLE"
+    },
+    {
+      "relation_oid": "101",
+      "schema_name": "public",
+      "relation_name": "orders",
+      "constraint_name": "orders_id_positive",
+      "constraint_type": "check",
+      "columns": [],
+      "referenced_schema": null,
+      "referenced_relation": null,
+      "referenced_columns": null,
+      "definition": "CHECK (id > 0)"
+    }
+  ],
+  "enums": [
+    {
+      "schema_name": "public",
+      "type_name": "order_status",
+      "comment": "Lifecycle states for an order",
+      "values": ["pending", "paid", "cancelled"]
+    }
+  ],
+  "indexes": [
+    {
+      "schema_name": "public",
+      "relation_name": "customers",
+      "index_name": "customers_pkey",
+      "definition": "CREATE UNIQUE INDEX customers_pkey ON public.customers USING btree (id)"
+    },
+    {
+      "schema_name": "public",
+      "relation_name": "orders",
+      "index_name": "orders_customer_id_idx",
+      "definition": "CREATE INDEX orders_customer_id_idx ON public.orders USING btree (customer_id)"
+    }
+  ]
+}
