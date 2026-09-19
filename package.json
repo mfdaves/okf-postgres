@@ -2,6 +2,14 @@
   "name": "@mfdaves/okf-postgres",
   "version": "0.1.0",
   "description": "Read-only PostgreSQL metadata producer for Open Knowledge Format bundles.",
+  "homepage": "https://github.com/mfdaves/okf-postgres#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mfdaves/okf-postgres.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mfdaves/okf-postgres/issues"
+  },
   "license": "MIT",
   "type": "commonjs",
   "main": "src/index.js",
