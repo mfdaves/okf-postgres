@@ -28,6 +28,7 @@
     "check": "node --test test/*.test.js",
     "coverage": "node --experimental-test-coverage --test test/*.test.js",
     "smoke": "node scripts/mock-smoke.js",
+    "live:shape": "node --test test/live-shape.test.js",
     "live:smoke": "node scripts/live-smoke.js",
     "pack:check": "npm pack --dry-run"
   },

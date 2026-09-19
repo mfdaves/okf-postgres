@@ -73,6 +73,13 @@ jobs:
         working-directory: okf-mcp
       - run: npm ci
         working-directory: okf-postgres
+      # The mock suite cannot see the SQL, so a live server is the only oracle
+      # for what the catalog queries actually project and how they are typed.
+      - run: npm run live:shape
+        working-directory: okf-postgres
+        env:
+          OKF_POSTGRES_LIVE_TEST: "1"
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/okf_test
       - run: npm run live:smoke
         working-directory: okf-postgres
         env:
