@@ -4,7 +4,8 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
-const { readCatalog } = require("../src/catalog");
+const catalogSql = require("../src/catalog");
+const { readCatalog } = catalogSql;
 const { MockCatalogClient } = require("./support/mock-client");
 
 const fixture = path.join(__dirname, "fixtures/query-results.json");
@@ -26,7 +27,10 @@ test("catalog reader assembles the PostgreSQL metadata average users need", asyn
   assert.equal(customers.columns.find((column) => column.name === "email_normalized").generated, "stored");
   assert.equal(orders.constraints[0].type, "foreign_key");
   assert.equal(orders.constraints[0].referencedRelation, "customers");
+  assert.deepEqual(orders.constraints[0].columns, ["customer_id"]);
+  assert.deepEqual(orders.constraints[0].referencedColumns, ["id"]);
   assert.equal(orders.constraints.some((constraint) => constraint.type === "check"), true);
+  assert.deepEqual(customers.constraints[0].columns, ["id"]);
   assert.equal(orders.indexes[0].name, "orders_customer_id_idx");
   assert.deepEqual(catalog.enums, [{
     schema: "public",
@@ -38,6 +42,40 @@ test("catalog reader assembles the PostgreSQL metadata average users need", asyn
     "database", "schemas", "relations", "columns", "constraints", "indexes", "enums",
   ]);
   assert.deepEqual(client.calls[1].values, [["public"]]);
+});
+
+// node-postgres ships no decoder for name[]. An aggregate over an uncast name
+// column arrives as the raw literal "{a,b}", and every reader that expects an
+// array then degrades silently, so no name column may be aggregated uncast.
+function aggregatedExpressions(sql) {
+  const regions = [];
+  const pattern = /\b(?:ARRAY|array_agg)\s*\(/gi;
+  let match = pattern.exec(sql);
+  while (match) {
+    let depth = 1;
+    let index = match.index + match[0].length;
+    while (index < sql.length && depth > 0) {
+      if (sql[index] === "(") depth += 1;
+      else if (sql[index] === ")") depth -= 1;
+      index += 1;
+    }
+    regions.push(sql.slice(match.index, index));
+    match = pattern.exec(sql);
+  }
+  return regions;
+}
+
+test("no name-typed column is aggregated without a text cast in any catalog query", () => {
+  const nameColumns = /\b\w+\.(attname|relname|nspname|conname|typname|enumlabel)\b(?!::text)/;
+  const offenders = [];
+  Object.entries(catalogSql)
+    .filter(([key, value]) => key.endsWith("_SQL") && typeof value === "string")
+    .forEach(([key, sql]) => {
+      aggregatedExpressions(sql)
+        .filter((region) => nameColumns.test(region))
+        .forEach((region) => offenders.push(`${key}: ${region.replace(/\s+/g, " ").slice(0, 80)}`));
+    });
+  assert.deepEqual(offenders, []);
 });
 
 test("catalog reader can discover accessible user schemas", async () => {
@@ -107,5 +145,7 @@ test("catalog reader preserves multi-schema and cross-schema foreign-key metadat
     .constraints.find((constraint) => constraint.name === "orders_account_id_fkey");
   assert.equal(foreignKey.referencedSchema, "sales");
   assert.equal(foreignKey.referencedRelation, "accounts");
+  assert.deepEqual(foreignKey.columns, ["customer_id"]);
+  assert.deepEqual(foreignKey.referencedColumns, ["id"]);
   assert.match(foreignKey.definition, /ON DELETE RESTRICT DEFERRABLE/);
 });

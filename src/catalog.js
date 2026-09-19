@@ -87,7 +87,7 @@ SELECT con.conrelid::text AS relation_oid,
          WHEN 'c' THEN 'check'
        END AS constraint_type,
        ARRAY(
-         SELECT a.attname
+         SELECT a.attname::text
          FROM unnest(con.conkey) WITH ORDINALITY AS key(attnum, position)
          JOIN pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = key.attnum
          ORDER BY key.position
@@ -95,7 +95,7 @@ SELECT con.conrelid::text AS relation_oid,
        rn.nspname AS referenced_schema,
        rc.relname AS referenced_relation,
        CASE WHEN con.contype = 'f' THEN ARRAY(
-         SELECT a.attname
+         SELECT a.attname::text
          FROM unnest(con.confkey) WITH ORDINALITY AS key(attnum, position)
          JOIN pg_attribute a ON a.attrelid = con.confrelid AND a.attnum = key.attnum
          ORDER BY key.position
@@ -127,7 +127,7 @@ const ENUMS_SQL = `
 SELECT n.nspname AS schema_name,
        t.typname AS type_name,
        obj_description(t.oid, 'pg_type') AS comment,
-       array_agg(e.enumlabel ORDER BY e.enumsortorder) AS values
+       array_agg(e.enumlabel::text ORDER BY e.enumsortorder) AS values
 FROM pg_type t
 JOIN pg_namespace n ON n.oid = t.typnamespace
 JOIN pg_enum e ON e.enumtypid = t.oid

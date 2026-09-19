@@ -36,6 +36,7 @@ test("renderer produces deterministic OKF concepts and relationship links", asyn
   assert.match(orders, /id column on public\.orders\./);
   assert.match(orders, /Owning customer/);
   assert.match(orders, /ON DELETE CASCADE DEFERRABLE/);
+  assert.match(orders, /\*\*orders_customer_id_fkey\*\*: foreign key \(`customer_id`\).*\(`id`\)/);
 
   const rootIndex = first.get("index.md");
   assert.match(rootIndex, /- \[shop\]\(database\.md\)/);
@@ -52,6 +53,7 @@ test("renderer produces deterministic OKF concepts and relationship links", asyn
   assert.match(customers, /Customer identifier/);
   assert.match(customers, /identity by default/);
   assert.match(customers, /generated stored/);
+  assert.match(customers, /\*\*customers_pkey\*\*: primary key \(`id`\)/);
 
   const enumType = first.get("types/public/order_status.md");
   assert.match(enumType, /type: PostgreSQL Enum/);
