@@ -25,25 +25,45 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      # The smoke gate drives this producer through the okf-mcp producer host,
+      # so the release needs the same sibling layout the CI workflow uses.
       - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref }}
+          path: okf-postgres
+
+      - uses: actions/checkout@v6
+        with:
+          repository: mfdaves/okf-mcp
+          path: okf-mcp
 
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
           cache: npm
+          cache-dependency-path: |
+            okf-postgres/package-lock.json
+            okf-mcp/package-lock.json
 
       - run: npm install --global "npm@^11.5.1"
       - run: npm --version
+
       - run: npm ci
+        working-directory: okf-mcp
+
+      - run: npm ci
+        working-directory: okf-postgres
       - run: npm test
+        working-directory: okf-postgres
       - run: npm run smoke
+        working-directory: okf-postgres
       - run: npm run pack:check
+        working-directory: okf-postgres
 
       - name: Verify release identity and publish
         shell: bash
+        working-directory: okf-postgres
         env:
           NPM_DIST_TAG: ${{ inputs.dist_tag }}
           RELEASE_REF: ${{ inputs.ref }}
